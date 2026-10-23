@@ -1,0 +1,13 @@
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8600
+  Network URL: http://172.16.179.46:8600
+  External URL: http://182.156.30.23:8600
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+  Stopping...

@@ -1,0 +1,48 @@
+==============================================================================
+NetLens Phase-2 validation — parser.py vs tshark, field by field
+==============================================================================
+tshark: /Applications/Wireshark.app/Contents/MacOS/tshark
+capture: /Users/sannidhyasinha/Desktop/NetLens/captures/reference.pcap (generated, 26 frames covering TCP options, fragments,
+         VLAN tags, IPv6, embedded headers and DNS edge cases)
+
+frames decoded by both: 26
+
+field         compared    agree   differ
+-----------------------------------------
+ack                 13       13        0
+arp_op               2        2        0
+dns_qname            5        5        0
+dst_ip              26       26        0
+dst_mac             26       26        0
+dst_port            19       19        0
+flags               13       13        0
+icmp_type            4        4        0
+length              26       26        0
+payload_len         19       19        0
+seq                 13       13        0
+src_ip              26       26        0
+src_mac             26       26        0
+src_port            19       19        0
+ttl                 24       24        0
+window              13       13        0
+-----------------------------------------
+TOTAL              274      274        0
+
+fields not compared (parser does not claim them for that protocol)
+  ack (ICMP)             ×3 — tshark reads the header quoted inside the ICMP error; the parser describes the outer frame
+  ack (ICMPv6)           ×1 — tshark reads the header quoted inside the ICMP error; the parser describes the outer frame
+  dst_port (ICMP)        ×3 — tshark reads the header quoted inside the ICMP error; the parser describes the outer frame
+  dst_port (ICMPv6)      ×1 — tshark reads the header quoted inside the ICMP error; the parser describes the outer frame
+  flags (ICMP)           ×3 — tshark reads the header quoted inside the ICMP error; the parser describes the outer frame
+  flags (ICMPv6)         ×1 — tshark reads the header quoted inside the ICMP error; the parser describes the outer frame
+  payload_len (ICMP)     ×3 — parser measures ICMP data; tshark exposes it under a different field
+  payload_len (ICMPv6)   ×1 — same, for ICMPv6
+  seq (ICMP)             ×3 — tshark reads the header quoted inside the ICMP error; the parser describes the outer frame
+  seq (ICMPv6)           ×1 — tshark reads the header quoted inside the ICMP error; the parser describes the outer frame
+  src_port (ICMP)        ×3 — tshark reads the header quoted inside the ICMP error; the parser describes the outer frame
+  src_port (ICMPv6)      ×1 — tshark reads the header quoted inside the ICMP error; the parser describes the outer frame
+  window (ICMP)          ×3 — tshark reads the header quoted inside the ICMP error; the parser describes the outer frame
+  window (ICMPv6)        ×1 — tshark reads the header quoted inside the ICMP error; the parser describes the outer frame
+
+agreement: 100.0000% over 274 field comparisons across 26 frames
+PASS — parser.py matches the reference dissector

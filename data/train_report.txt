@@ -1,0 +1,73 @@
+NetLens supervised classifier — training report
+trained_at        2026-10-19 20:53
+flows             5600 (700/class)
+features          37
+train/test        4200/1400
+accuracy          0.9914
+macro-F1          0.9914
+CV macro-F1       0.9933 +/- 0.0028
+
+                 precision    recall  f1-score   support
+
+         benign     1.0000    1.0000    1.0000       175
+     data_exfil     1.0000    1.0000    1.0000       175
+     dns_tunnel     1.0000    1.0000    1.0000       175
+     icmp_flood     1.0000    1.0000    1.0000       175
+      port_scan     0.9454    0.9886    0.9665       175
+      slowloris     1.0000    1.0000    1.0000       175
+ssh_brute_force     1.0000    1.0000    1.0000       175
+      syn_flood     0.9880    0.9429    0.9649       175
+
+       accuracy                         0.9914      1400
+      macro avg     0.9917    0.9914    0.9914      1400
+   weighted avg     0.9917    0.9914    0.9914      1400
+
+confusion matrix (rows=true, cols=pred)
+labels: benign, data_exfil, dns_tunnel, icmp_flood, port_scan, slowloris, ssh_brute_force, syn_flood
+     175      0      0      0      0      0      0      0
+       0    175      0      0      0      0      0      0
+       0      0    175      0      0      0      0      0
+       0      0      0    175      0      0      0      0
+       0      0      0      0    173      0      0      2
+       0      0      0      0      0    175      0      0
+       0      0      0      0      0      0    175      0
+       0      0      0      0     10      0      0    165
+
+feature importances
+  syn_ratio                0.08342
+  fwd_bwd_pkt_ratio        0.07997
+  dns_entropy_max          0.06979
+  max_iat                  0.06165
+  down_up_bytes_ratio      0.05600
+  bwd_fraction             0.05351
+  bwd_mean_len             0.05077
+  mean_ttl                 0.04362
+  packets_per_sec          0.03740
+  std_iat                  0.03484
+  fwd_bytes                0.03406
+  mean_iat                 0.03324
+  rst_ratio                0.02824
+  psh_count                0.02807
+  mean_pkt_len             0.02782
+  bytes_per_sec            0.02741
+  max_pkt_len              0.02663
+  min_pkt_len              0.02448
+  rst_count                0.02394
+  bwd_bytes                0.02276
+  duration                 0.02070
+  fwd_packets              0.01648
+  fwd_mean_len             0.01289
+  syn_count                0.01258
+  std_pkt_len              0.01179
+  total_bytes              0.00905
+  ack_count                0.00890
+  is_icmp                  0.00808
+  total_packets            0.00748
+  min_iat                  0.00682
+  bwd_packets              0.00637
+  is_tcp                   0.00622
+  handshake_complete       0.00605
+  is_udp                   0.00564
+  dst_port_wellknown       0.00504
+  synack_count             0.00476
+  fin_count                0.00352

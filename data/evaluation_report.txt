@@ -1,0 +1,122 @@
+NetLens — Phase 5 evaluation
+2026-10-19 21:14:20
+
+==============================================================================
+A.  SUPERVISED CLASSIFIER — held-out test metrics
+==============================================================================
+model          RandomForestClassifier (300 trees)
+trained        2026-10-19 20:53  ·  seed 42
+features       37
+flows          5600 total, 1400 held out
+
+accuracy       0.9914
+macro-F1       0.9914
+weighted-F1    0.9914
+macro ROC-AUC  0.9999  (one-vs-rest)
+
+                 precision    recall  f1-score   support
+
+         benign     1.0000    1.0000    1.0000       175
+     data_exfil     1.0000    1.0000    1.0000       175
+     dns_tunnel     1.0000    1.0000    1.0000       175
+     icmp_flood     1.0000    1.0000    1.0000       175
+      port_scan     0.9454    0.9886    0.9665       175
+      slowloris     1.0000    1.0000    1.0000       175
+ssh_brute_force     1.0000    1.0000    1.0000       175
+      syn_flood     0.9880    0.9429    0.9649       175
+
+       accuracy                         0.9914      1400
+      macro avg     0.9917    0.9914    0.9914      1400
+   weighted avg     0.9917    0.9914    0.9914      1400
+
+binary view — benign vs any attack
+  detection rate (recall) 1.0000   missed attacks: 0
+  false-positive rate     0.0000   benign flagged: 0/175
+
+confusion matrix (rows = true, cols = predicted)
+                       benign  data_exfi  dns_tunne  icmp_floo  port_scan  slowloris  ssh_brute  syn_flood
+  benign                  175          0          0          0          0          0          0          0
+  data_exfil                0        175          0          0          0          0          0          0
+  dns_tunnel                0          0        175          0          0          0          0          0
+  icmp_flood                0          0          0        175          0          0          0          0
+  port_scan                 0          0          0          0        173          0          0          2
+  slowloris                 0          0          0          0          0        175          0          0
+  ssh_brute_force           0          0          0          0          0          0        175          0
+  syn_flood                 0          0          0          0         10          0          0        165
+
+remaining confusions
+    10  syn_flood -> port_scan
+     2  port_scan -> syn_flood
+  note: port_scan vs syn_flood is the expected hard pair — both are
+        1-3 packet SYN-only flows, and at flow level they genuinely
+        look alike. The rule tier separates them on fan-out (many
+        ports on one host vs many sources on one port), which is
+        exactly why the three tiers are run together.
+
+feature importances (top 15)
+  syn_ratio              0.0834  ##################################
+  fwd_bwd_pkt_ratio      0.0800  ################################
+  dns_entropy_max        0.0698  ############################
+  max_iat                0.0616  #########################
+  down_up_bytes_ratio    0.0560  ######################
+  bwd_fraction           0.0535  #####################
+  bwd_mean_len           0.0508  ####################
+  mean_ttl               0.0436  #################
+  packets_per_sec        0.0374  ###############
+  std_iat                0.0348  ##############
+  fwd_bytes              0.0341  #############
+  mean_iat               0.0332  #############
+  rst_ratio              0.0282  ###########
+  psh_count              0.0281  ###########
+  mean_pkt_len           0.0278  ###########
+
+Isolation Forest (tier 2) on the same dataset
+  flags 95.2% of attack flows as anomalous, 3.0% FP on benign
+  — label-free, so it generalises to attacks never trained on, but it
+    reports 'unusual' and not a class name. Complementary, not a rival.
+
+==============================================================================
+B.  END-TO-END PIPELINE DETECTION (unseen seed, full L1-L3 stack)
+==============================================================================
+Each scenario is replayed through FlowTable + all three detector
+tiers, 8 independent trials per attack class, seed 2026.
+A trial counts as detected if ANY tier raised a matching alert.
+
+port_scan        detected 8/8 (100%)   first alert +0.45s   [model×8, rule×8]
+                   model:syn_flood  ×17
+                   rule:port_scan  ×8
+                   model:port_scan  ×8
+                   rule:syn_flood  ×8
+syn_flood        detected 8/8 (100%)   first alert +0.22s   [model×8, rule×8]
+                   model:port_scan  ×10
+                   rule:syn_flood  ×8
+                   model:syn_flood  ×8
+dns_tunnel       detected 8/8 (100%)   first alert +0.46s   [model×8, rule×8]
+                   rule:dns_tunnel  ×16
+                   model:dns_tunnel  ×8
+icmp_flood       detected 8/8 (100%)   first alert +0.25s   [baseline×1, model×8, rule×8]
+                   rule:icmp_flood  ×8
+                   model:icmp_flood  ×8
+                   baseline:anomalous_flow  ×1
+ssh_brute_force  detected 8/8 (100%)   first alert +0.48s   [baseline×1, model×8, rule×8]
+                   model:ssh_brute_force  ×15
+                   rule:brute_force  ×14
+                   model:slowloris  ×1
+                   baseline:anomalous_flow  ×1
+slowloris        detected 8/8 (100%)   first alert +137.46s   [baseline×2, model×8]
+                   model:slowloris  ×8
+                   baseline:anomalous_flow  ×2
+data_exfil       detected 8/8 (100%)   first alert +2.15s   [model×8]
+                   model:data_exfil  ×8
+
+false positives on benign-only traffic
+  4 runs, 180 benign flows -> 12 alerts (0.0667 per flow)
+    baseline:anomalous_flow  ×12
+
+  Reading this: tier-2 alerts on benign traffic are not strictly
+  'wrong' — an Isolation Forest is calibrated to call ~3% of flows
+  unusual (config.IFOREST_CONTAMINATION). Rule-tier and model-tier
+  false positives are the ones that matter, and they are reported
+  separately above for exactly that reason.
+
+completed in 45.1s
